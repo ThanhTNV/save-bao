@@ -12,9 +12,7 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 
 # Install pip packages with increased timeout and retries
-RUN pip install --no-cache-dir --timeout 100 --retries 3 \
-    -i https://pypi.tuna.tsinghua.edu.cn/simple \
-    -r requirements.txt
+RUN pip install --no-cache-dir --timeout 100 --retries 3 -r requirements.txt
 
 # Copy the rest of the application
 COPY . .

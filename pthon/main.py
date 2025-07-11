@@ -6,6 +6,16 @@ from fastapi.responses import JSONResponse
 # Initialize the FastAPI app
 app = FastAPI()
 
+# Define the root endpoint
+@app.get("/")
+async def root():
+    return {"message": "Hello from FastAPI"}
+
+# Define the health check endpoint
+@app.get("/health-check")
+async def health_check():
+    return {"status": "healthy"}
+
 # Define the OCR endpoint
 @app.post("/ocr")
 async def process_image(file: UploadFile = File(...)):
