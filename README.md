@@ -47,24 +47,10 @@ The system consists of two main components:
 
 ## Prerequisites
 
-For local development:
-- .NET 7.0 or later
-- Python 3.12 or later
-- Required Python packages:
-  - FastAPI
-  - uvicorn
-  - opencv-python-headless
-  - (see `requirements.txt` for full list)
-- Visual Studio 2022 or VS Code with C# extensions
-- PowerShell 7.0 or later
-
-For Docker deployment:
 - Docker Engine 20.10.0 or later
 - Docker Compose v2.0.0 or later
 
 ## Setup and Installation
-
-### Using Docker (Recommended)
 
 1. Clone the repository:
 ```bash
@@ -83,45 +69,6 @@ This will start:
 To stop the services:
 ```bash
 docker-compose down
-```
-
-### Local Development
-
-1. Clone the repository:
-```bash
-git clone [repository-url]
-```
-
-2. Install Python dependencies:
-```bash
-cd pthon
-pip install -r requirements.txt
-cd ..
-```
-
-3. Run both services using the provided PowerShell script:
-```powershell
-.\run-services.ps1
-```
-
-This will start:
-- Python FastAPI service on http://localhost:8000
-- ASP.NET Core service on http://localhost:5000
-
-Press Ctrl+C to stop both services.
-
-Alternatively, you can run the services separately:
-
-4a. Run the ASP.NET Core application:
-```bash
-cd dotNetApi
-dotnet run
-```
-
-4b. Run the Python service (in a separate terminal):
-```bash
-cd pthon
-uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
 ## API Endpoints
@@ -154,7 +101,6 @@ Accepts image files and returns extracted text.
 │   ├── Dockerfile     # Python service Dockerfile
 │   └── requirements.txt # Python dependencies
 ├── docker-compose.yml  # Docker Compose configuration
-├── run-services.ps1    # Script to run both services locally
 └── README.md          # Project documentation
 ```
 
