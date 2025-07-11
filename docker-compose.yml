@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  webapi:
+    build:
+      context: ./dotNetApi
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      # Use the service name 'python-service' as hostname
+      - PYTHON_SERVICE_URL=http://python-service:8000
+    depends_on:
+      - python-service
+    networks:
+      - ocr-network
+
+  python-service:
+    build:
+      context: ./pthon
+      dockerfile: Dockerfile
+    # Only expose to host if needed for debugging
+    ports:
+      - "8000:8000"
+    networks:
+      - ocr-network
+
+networks:
+  ocr-network:
+    driver: bridge 
