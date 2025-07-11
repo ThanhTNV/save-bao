@@ -35,10 +35,11 @@ async def process_image(file: UploadFile = File(...)):
 
         # For demonstration purposes, we will simulate the OCR result
         # In a real scenario, you would use the OCR library to extract text from the image.
-        vin = "50H-43210"
+        vin = "50H-43210" # Vehicle Identification Number
+        confidence = 0.9 # Just example of confidence
 
         # Return the extracted text as JSON
-        return JSONResponse(content={"vin": vin.strip()})
+        return JSONResponse(content={"vin": vin.strip(), "confidence": confidence})
 
     except Exception as e:
         return JSONResponse(status_code=500, content={"message": str(e)})
