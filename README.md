@@ -49,10 +49,11 @@ The system consists of two main components:
 
 For local development:
 - .NET 7.0 or later
-- Python 3.8 or later
+- Python 3.12 or later
 - Required Python packages:
   - FastAPI
   - uvicorn
+  - opencv-python-headless
   - (see `requirements.txt` for full list)
 - Visual Studio 2022 or VS Code with C# extensions
 - PowerShell 7.0 or later
@@ -113,7 +114,7 @@ Alternatively, you can run the services separately:
 
 4a. Run the ASP.NET Core application:
 ```bash
-cd WebApi
+cd dotNetApi
 dotnet run
 ```
 
@@ -146,13 +147,20 @@ Accepts image files and returns extracted text.
 ## Project Structure
 
 ```
-├── WebApi/              # ASP.NET Core application
+├── dotNetApi/           # ASP.NET Core application
 │   └── Dockerfile      # .NET service Dockerfile
-├── pthon/               # Python OCR service
-│   ├── main.py         # FastAPI application
-│   ├── Dockerfile      # Python service Dockerfile
+├── pthon/              # Python OCR service
+│   ├── main.py        # FastAPI application
+│   ├── Dockerfile     # Python service Dockerfile
 │   └── requirements.txt # Python dependencies
-├── docker-compose.yml   # Docker Compose configuration
-├── run-services.ps1     # Script to run both services locally
-└── README.md           # Project documentation
+├── docker-compose.yml  # Docker Compose configuration
+├── run-services.ps1    # Script to run both services locally
+└── README.md          # Project documentation
 ```
+
+## Inter-Service Communication
+
+The services communicate through Docker's internal network:
+- ASP.NET Core service can reach the Python service at `http://python-service:8000`
+- Services are configured to work together automatically when using Docker Compose
+- No additional DNS or host configuration is needed
