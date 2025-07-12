@@ -1,41 +1,32 @@
 import cv2
 import numpy as np
-from fastapi import FastAPI, UploadFile, File
-from fastapi.responses import JSONResponse
 import pytesseract
 import re
+import os
 
-# Initialize the FastAPI app
-app = FastAPI()
-
-# Define the root endpoint
-@app.get("/")
-async def root():
-    return {"message": "Hello from FastAPI"}
-
-# Define the health check endpoint
-@app.get("/health-check")
-async def health_check():
-    return {"status": "healthy"}
-
-# Define the OCR endpoint
-@app.post("/ocr")
-async def process_image(file: UploadFile = File(...)):
+def test_ocr_from_file(image_path):
+    """
+    Processes a local image file to extract potential VINs using OCR
+    and saves intermediate steps for debugging.
+    """
     try:
-        # Read image file into memory
-        image_bytes = await file.read()
-        nparr = np.fromstring(image_bytes, np.uint8)
-        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        output_dir = "output"
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
 
-        # --- PREPROCESSING FOR LOW-QUALITY IMAGES ---
-        # Convert to grayscale
+        img = cv2.imread(image_path)
+        if img is None:
+            print(f"Error: Could not read image from path: {image_path}")
+            return
+
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        cv2.imwrite(os.path.join(output_dir, "1_grayscale.png"), gray)
 
-        # Apply thresholding to get a binary image
         thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
+        cv2.imwrite(os.path.join(output_dir, "2_threshold.png"), thresh)
 
-        # Apply noise reduction
         denoised = cv2.medianBlur(thresh, 3)
+        cv2.imwrite(os.path.join(output_dir, "3_denoised.png"), denoised)
 
         # Tesseract configuration:
         # --oem 3: Default OCR Engine Mode
@@ -45,9 +36,21 @@ async def process_image(file: UploadFile = File(...)):
         custom_config = f'--oem 3 --psm 11 -c tessedit_char_whitelist={whitelist}'
         ocr_data = pytesseract.image_to_data(denoised, output_type=pytesseract.Output.DICT, config=custom_config)
 
+        # --- Debugging: Print all detected words and their confidence ---
+        all_words = []
+        for i in range(len(ocr_data['text'])):
+            text = ocr_data['text'][i].strip()
+            conf = float(ocr_data['conf'][i])
+            if text:
+                all_words.append(f"'{text}' (Conf: {conf}%)")
+        print("--- All Detected Words ---")
+        print(" ".join(all_words))
+        print("--------------------------\n")
+
         # --- VIN Matching Logic ---
         # Combine all detected text fragments and clean them up
         cleaned_text = re.sub(r'[^A-Z0-9]', '', "".join(ocr_data['text'])).upper()
+        print(f"--- Cleaned text for matching: '{cleaned_text}' ---\n")
 
         # New regex for a pattern like '99H77060'
         # \d{2}   - two digits (99)
@@ -70,9 +73,17 @@ async def process_image(file: UploadFile = File(...)):
                 "confidence": round(avg_conf / 100, 2)
             })
 
-        return JSONResponse(content={"results": results})
+        print("--- OCR Results (VIN Pattern Matched) ---")
+        if results:
+            for res in results:
+                print(f"  - VIN: {res['vin']}, Confidence: {res['confidence'] * 100:.2f}%")
+        else:
+            print("  No potential VINs found matching the pattern.")
+        print("-------------------------------------------\n")
 
     except Exception as e:
-        return JSONResponse(status_code=500, content={"message": str(e)})
+        print(f"An error occurred: {e}")
 
-# To run the server: uvicorn main:app --reload
+if __name__ == "__main__":
+    image_to_test = "test_ocr.jpg"
+    test_ocr_from_file(image_to_test) 

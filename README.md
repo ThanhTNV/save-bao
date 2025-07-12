@@ -1,6 +1,6 @@
 # Text Recognition Web Service
 
-A web service that performs Optical Character Recognition (OCR) on low-quality text images using a combination of ASP.NET Core backend and Python-based AI processing.
+A web service that performs Optical Character Recognition (OCR) on low-quality text images using a combination of ASP.NET Core backend and Python-based AI processing. Specialized in recognizing Vehicle Identification Numbers (VINs) from images.
 
 ## Project Overview
 
@@ -74,7 +74,7 @@ docker-compose down
 ## API Endpoints
 
 ### POST /api/ocr
-Accepts image files and returns extracted text.
+Accepts image files and returns extracted VINs with confidence scores.
 
 **Request:**
 - Method: POST
@@ -86,9 +86,61 @@ Accepts image files and returns extracted text.
 **Response:**
 ```json
 {
-  "text": "Extracted text content",
-  "confidence": 0.95
+  "results": [
+    {
+      "vin": "99-H7-7060",
+      "confidence": 0.95
+    }
+  ]
 }
+```
+
+## OCR Processing Pipeline
+
+The OCR service implements a sophisticated image processing and text recognition pipeline:
+
+### 1. Image Preprocessing
+- Conversion to grayscale for better text contrast
+- Binary thresholding using Otsu's method
+- Noise reduction using median blur
+- These steps enhance text clarity and improve recognition accuracy
+
+### 2. OCR Configuration
+- Uses Tesseract OCR engine with specialized configuration:
+  - Page Segmentation Mode (PSM) 11 for sparse text detection
+  - Character whitelist for uppercase letters and numbers
+  - Optimized for multi-line text formats
+
+### 3. VIN Pattern Recognition
+- Combines all detected text fragments
+- Cleans and normalizes text (removes spaces, special characters)
+- Matches VIN patterns using regular expressions
+- Current supported format: "XX-YZ-ZZZZZ" where:
+  - XX: Two digits
+  - Y: One uppercase letter
+  - Z: Five digits
+- Example: "99-H7-7060"
+
+### 4. Confidence Scoring
+- Calculates confidence scores based on OCR engine's character recognition certainty
+- Returns normalized scores between 0 and 1
+- Higher scores indicate more reliable recognition
+
+### Testing Tools
+
+The project includes a dedicated testing environment in the `pthon_test` directory:
+- Standalone test script for OCR verification
+- Debug output with intermediate processing steps
+- Visual feedback through saved images
+- Useful for testing and validating OCR performance
+
+To use the test environment:
+1. Place test image in `pthon_test` directory
+2. Build and run the test container:
+```bash
+cd pthon_test
+docker build -t ocr-test .
+docker run --rm -v "$(pwd)/output:/app/output" ocr-test
 ```
 
 ## Project Structure
